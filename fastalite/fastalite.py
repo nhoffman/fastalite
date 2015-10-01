@@ -7,7 +7,7 @@ except ImportError:
     bz2 = None
 
 
-SeqLite = namedtuple('SeqLite', 'id, description, seq')
+Seq = namedtuple('Seq', 'id, description, seq')
 
 
 class Opener(object):
@@ -15,63 +15,51 @@ class Opener(object):
     """Factory for creating file objects. Transparenty opens compressed
     files for reading or writing based on suffix (.gz and .bz2 only).
 
-    Keyword Arguments:
-        - mode -- A string indicating how the file is to be opened. Accepts the
-            same values as the builtin open() function.
-        - bufsize -- The file's desired buffer size. Accepts the same values as
-            the builtin open() function.
+    Example::
 
+        with Opener()('in.txt') as infile, Opener('w')('out.gz') as outfile:
+            outfile.write(infile.read())
     """
 
-    def __init__(self, mode='r', bufsize=-1):
-        self._mode = mode
-        self._bufsize = bufsize
+    def __init__(self, *args, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.mode = self.kwargs.get('mode') or (self.args[0] if self.args else 'r')
+        self.writable = 'w' in self.mode
 
-    def __call__(self, string):
-        if string is sys.stdout or string is sys.stdin:
-            return string
-        elif string == '-':
-            return sys.stdin if 'r' in self._mode else sys.stdout
-        elif string.endswith('.bz2'):
+    def __call__(self, obj):
+        if obj is sys.stdout or obj is sys.stdin:
+            return obj
+        elif obj == '-':
+            return sys.stdout if self.writable else sys.stdin
+        elif obj.endswith('.bz2'):
             if bz2 is None:
                 raise ImportError(
                     'could not import bz2 module - was python built with libbz2?')
-            return bz2.BZ2File(
-                string, self._mode, self._bufsize)
-        elif string.endswith('.gz'):
-            return gzip.open(
-                string, self._mode, self._bufsize)
+            return bz2.BZ2File(obj, *self.args, **self.kwargs)
+        elif obj.endswith('.gz'):
+            return gzip.open(obj, *self.args, **self.kwargs)
         else:
-            return open(string, self._mode, self._bufsize)
+            return open(obj, *self.args, **self.kwargs)
 
     def __repr__(self):
-        args = self._mode, self._bufsize
-        args_str = ', '.join(repr(arg) for arg in args if arg != -1)
-        return '{}({})'.format(type(self).__name__, args_str)
+        return '{}("{}")'.format(type(self).__name__, self.mode)
 
 
-def fastalite(handle, limit=None):
+def fastalite(handle):
+    """Return a sequence of namedtuple objects with attributes (id,
+    description, seq) given open file-like object ``handle``
+
     """
-    Return a sequence of namedtupe objects given fasta format open
-    file-like object `handle`. Sequence is a list if `readfile` is
-    True, an iterator otherwise.
-    """
-    limit = limit or -1
 
     name, seq = '', ''
     for line in handle:
         if line.startswith('>'):
-            if limit != 0:
-                limit -= 1
-            else:
-                break
-
             if name:
-                yield SeqLite(name.split()[0], name, seq)
-
+                yield Seq(name.split()[0], name, seq)
             name, seq = line[1:].strip(), ''
         else:
             seq += line.strip()
 
     if name and seq:
-        yield SeqLite(name.split()[0], name, seq)
+        yield Seq(name.split()[0], name, seq)
