@@ -2,16 +2,15 @@ import sys
 import gzip
 from collections import namedtuple
 try:
-    import bz2
-except ImportError:
-    bz2 = None
+    from bz2 import BZ2File
+except ImportError, err:
+    BZ2File = lambda x, *args, **kwargs: sys.exit(err)
 
 
 Seq = namedtuple('Seq', 'id, description, seq')
 
 
 class Opener(object):
-
     """Factory for creating file objects. Transparenty opens compressed
     files for reading or writing based on suffix (.gz and .bz2 only).
 
@@ -24,26 +23,18 @@ class Opener(object):
     def __init__(self, *args, **kwargs):
         self.args = args
         self.kwargs = kwargs
-        self.mode = self.kwargs.get('mode') or (self.args[0] if self.args else 'r')
-        self.writable = 'w' in self.mode
+        self.writable = 'w' in kwargs.get('mode', args[0] if args else 'r')
 
     def __call__(self, obj):
         if obj is sys.stdout or obj is sys.stdin:
             return obj
         elif obj == '-':
             return sys.stdout if self.writable else sys.stdin
-        elif obj.endswith('.bz2'):
-            if bz2 is None:
-                raise ImportError(
-                    'could not import bz2 module - was python built with libbz2?')
-            return bz2.BZ2File(obj, *self.args, **self.kwargs)
-        elif obj.endswith('.gz'):
-            return gzip.open(obj, *self.args, **self.kwargs)
         else:
-            return open(obj, *self.args, **self.kwargs)
-
-    def __repr__(self):
-        return '{}("{}")'.format(type(self).__name__, self.mode)
+            __, suffix = obj.rsplit('.', 1)
+            opener = {'bz2': BZ2File,
+                      'gz': gzip.open}.get(suffix, open)
+            return opener(obj, *self.args, **self.kwargs)
 
 
 def fastalite(handle):
@@ -52,14 +43,14 @@ def fastalite(handle):
 
     """
 
-    name, seq = '', ''
+    header, seq = '', []
     for line in handle:
         if line.startswith('>'):
-            if name:
-                yield Seq(name.split()[0], name, seq)
-            name, seq = line[1:].strip(), ''
+            if header:
+                yield Seq(header.split()[0], header, ''.join(seq))
+            header, seq = line[1:].strip(), []
         else:
-            seq += line.strip()
+            seq.append(line.strip())
 
-    if name and seq:
-        yield Seq(name.split()[0], name, seq)
+    if header and seq:
+        yield Seq(header.split()[0], header, ''.join(seq))
