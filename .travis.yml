@@ -7,8 +7,8 @@ cache:
     - $HOME/.cache/pip
 
 install:
-  - pip install -U pip
-  - pip install .
+  - pip install -U pip pytest
+  - pip install -U .
 
 script:
   - python setup.py test
