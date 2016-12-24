@@ -7,9 +7,6 @@ except ImportError, err:
     BZ2File = lambda x, *args, **kwargs: sys.exit(err)
 
 
-Seq = namedtuple('Seq', 'id, description, seq')
-
-
 class Opener(object):
     """Factory for creating file objects. Transparenty opens compressed
     files for reading or writing based on suffix (.gz and .bz2 only).
@@ -38,10 +35,13 @@ class Opener(object):
 
 
 def fastalite(handle):
-    """Return a sequence of namedtuple objects with attributes (id,
-    description, seq) given open file-like object ``handle``
+    """Return a sequence of namedtuple objects from a fasta file with
+    attributes (id, description, seq) given open file-like object
+    ``handle``
 
     """
+
+    Seq = namedtuple('Seq', ['id', 'description', 'seq'])
 
     header, seq = '', []
     for line in handle:
@@ -54,3 +54,39 @@ def fastalite(handle):
 
     if header and seq:
         yield Seq(header.split()[0], header, ''.join(seq))
+
+
+def fastqlite(handle):
+    """Return a sequence of namedtuple objects from a fastq file with
+    attributes (id, description, seq, qual) given open file-like
+    object ``handle``. This parser assumes that lines corresponding to
+    sequences and quality scores are not wrapped.
+
+    See https://doi.org/10.1093/nar/gkp1137 for a discussion of the
+    fastq format.
+
+    """
+
+    Seq = namedtuple('Seq', ['id', 'description', 'seq', 'qual'])
+
+    header, seq, qual, in_seq = '', [], [], True
+    for line in handle:
+        if line.startswith('@'):
+            if header and qual:
+                yield Seq(header.split()[0], header, ''.join(seq), ''.join(qual))
+            header, seq, qual, in_seq = line[1:].strip(), [], [], True
+        elif line.startswith('+'):
+            in_seq = False
+        elif in_seq:
+            seq.append(line.strip())
+        else:
+            qual.append(line.strip())
+
+    if header and qual:
+        yield Seq(header.split()[0], header, ''.join(seq), ''.join(qual))
+
+
+if __name__ == '__main__':
+    with open('testfiles/276-11_S1_L001_R1_001.fastq') as f:
+        for seq in fastqlite(f):
+            print seq
