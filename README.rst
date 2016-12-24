@@ -28,10 +28,21 @@ compressed files (inferred from a .gz or .bz2 suffix)::
   seqs = fastalite(args.infile)
 
 
-Installing
-==========
+Installation
+============
 
 For now::
 
   pip install git+https://github.com/nhoffman/fastalite.git
 
+
+Testing
+=======
+
+Tests require ``pytest``. Run all tests::
+
+  python setup.py test
+
+Pass options to pytest::
+
+  python setup.py test --addopts '-s'

@@ -1,4 +1,14 @@
+import os
+import subprocess
 from setuptools import setup, find_packages
+
+subprocess.call(
+    ('mkdir -p fastalite/data && '
+     'git describe --tags --dirty > fastalite/data/ver.tmp'
+     '&& mv fastalite/data/ver.tmp fastalite/data/ver '
+     '|| rm -f fastalite/data/ver.tmp'),
+    shell=True, stderr=open(os.devnull, "w"))
+
 from fastalite import __version__
 
 setup(
@@ -9,7 +19,10 @@ setup(
     name='fastalite',
     packages=find_packages(),
     package_dir={'fastalite': 'fastalite'},
+    package_data={'fastalite': ['data/ver']},
     version=__version__,
+    setup_requires=['pytest-runner'],
+    tests_require=['pytest'],
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
