@@ -1,6 +1,7 @@
 import sys
 import gzip
 from collections import namedtuple
+from itertools import izip_longest
 try:
     from bz2 import BZ2File
 except ImportError, err:
@@ -56,11 +57,19 @@ def fastalite(handle):
         yield Seq(header.split()[0], header, ''.join(seq))
 
 
+def grouper(iterable, n, fillvalue=None):
+    "Collect data into fixed-length chunks or blocks"
+    # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx
+    args = [iter(iterable)] * n
+    return izip_longest(fillvalue=fillvalue, *args)
+
+
 def fastqlite(handle):
     """Return a sequence of namedtuple objects from a fastq file with
     attributes (id, description, seq, qual) given open file-like
     object ``handle``. This parser assumes that lines corresponding to
-    sequences and quality scores are not wrapped.
+    sequences and quality scores are not wrapped. Raises
+    ``ValueError`` for malformed records.
 
     See https://doi.org/10.1093/nar/gkp1137 for a discussion of the
     fastq format.
@@ -68,25 +77,21 @@ def fastqlite(handle):
     """
 
     Seq = namedtuple('Seq', ['id', 'description', 'seq', 'qual'])
+    for i, chunk in enumerate(grouper(handle, 4, '')):
+        description, seq, plus, qual = chunk
+        seq, qual = seq.strip(), qual.strip()
 
-    header, seq, qual, in_seq = '', [], [], True
-    for line in handle:
-        if line.startswith('@'):
-            if header and qual:
-                yield Seq(header.split()[0], header, ''.join(seq), ''.join(qual))
-            header, seq, qual, in_seq = line[1:].strip(), [], [], True
-        elif line.startswith('+'):
-            in_seq = False
-        elif in_seq:
-            seq.append(line.strip())
-        else:
-            qual.append(line.strip())
+        checks = [description.startswith('@'), seq,
+                  plus.startswith('+'), qual, len(seq) == len(qual)]
 
-    if header and qual:
-        yield Seq(header.split()[0], header, ''.join(seq), ''.join(qual))
+        if not all(checks):
+            raise ValueError('Malformed record around line {}'.format(i * 4))
+
+        description = description[1:].strip()
+        yield Seq(description.split()[0], description, seq, qual)
 
 
 if __name__ == '__main__':
-    with open('testfiles/276-11_S1_L001_R1_001.fastq') as f:
+    with open(sys.argv[1]) as f:
         for seq in fastqlite(f):
             print seq

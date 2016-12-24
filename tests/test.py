@@ -4,7 +4,9 @@ import os
 from os import path
 import inspect
 
-from fastalite import fastalite, Opener
+import pytest
+
+from fastalite import fastalite, fastqlite, Opener
 
 outdir = 'test_output'
 
@@ -50,5 +52,37 @@ def test_opener():
             assert sa.seq == sb.seq == sc.seq
 
 
+def test_fastq1():
+    with Opener()('testfiles/good.fastq') as infile:
+        seqs = fastqlite(infile)
+        assert len(list(seqs)) == 20
 
 
+def test_fastq2():
+    "'+' replaced with '-' on line 15"
+    with Opener()('testfiles/bad1.fastq') as infile:
+        seqs = fastqlite(infile)
+        with pytest.raises(ValueError) as excinfo:
+            list(seqs)
+
+        assert 'line 12' in str(excinfo.value)
+
+
+def test_fastq3():
+    "final qual line missing"
+    with Opener()('testfiles/bad2.fastq') as infile:
+        seqs = fastqlite(infile)
+        with pytest.raises(ValueError) as excinfo:
+            list(seqs)
+
+        assert 'line 76' in str(excinfo.value)
+
+
+def test_fastq4():
+    "first qual line missing one character"
+    with Opener()('testfiles/bad3.fastq') as infile:
+        seqs = fastqlite(infile)
+        with pytest.raises(ValueError) as excinfo:
+            list(seqs)
+
+        assert 'line 0' in str(excinfo.value)
