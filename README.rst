@@ -2,6 +2,8 @@
  fastalite
 ===========
 
+[![Build Status](https://travis-ci.org/nhoffman/fastalite.svg?branch=master)](https://travis-ci.org/nhoffman/fastalite)
+
 The simplest possible fasta parser I could come up with. The
 ``fastalite`` function returns an iterator of namedtuples, each with
 attributes `id`, (the header line before the first whitespace)
