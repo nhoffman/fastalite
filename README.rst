@@ -37,6 +37,12 @@ from a .gz or .bz2 suffix), for example::
   seqs = fastalite(args.infile)
 
 
+You can perform a few actions on input files using the command line
+interface. For a list of available commands::
+
+  python -m fastalite -h
+
+
 Installation
 ============
 
