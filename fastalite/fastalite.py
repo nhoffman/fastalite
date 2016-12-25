@@ -92,6 +92,7 @@ def fastqlite(handle):
 
 
 if __name__ == '__main__':
-    with open(sys.argv[1]) as f:
-        for seq in fastqlite(f):
-            print seq
+    with Opener()(sys.argv[1]) as f:
+        readfun = fastalite if 'fasta' in f.name else fastqlite
+        for seq in readfun(f):
+            print(seq)
