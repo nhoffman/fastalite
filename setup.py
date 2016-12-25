@@ -21,8 +21,7 @@ setup(
     package_dir={'fastalite': 'fastalite'},
     package_data={'fastalite': ['data/ver']},
     version=__version__,
-    setup_requires=['pytest-runner'],
-    tests_require=['pytest'],
+    test_suite='tests',
     classifiers=[
         'Development Status :: 3 - Alpha',
         'Intended Audience :: Developers',
