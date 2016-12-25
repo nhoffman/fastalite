@@ -17,7 +17,7 @@ first whitespace) `description` (the entire header line), and `seq`
 
   from fastalite import fastalite
 
-  with open('inseqs.fasta') as infile, open('outseqs.fasta.gz', 'w') as outfile:
+  with open('inseqs.fasta') as infile, open('outseqs.fasta', 'w') as outfile:
       for seq in fastalite(infile):
           outfile.write('>{}\n{}\n'.format(seq.id, seq.seq))
 
