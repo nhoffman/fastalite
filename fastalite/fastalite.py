@@ -89,10 +89,3 @@ def fastqlite(handle):
 
         description = description[1:].strip()
         yield Seq(description.split()[0], description, seq, qual)
-
-
-if __name__ == '__main__':
-    with Opener()(sys.argv[1]) as f:
-        readfun = fastalite if 'fasta' in f.name else fastqlite
-        for seq in readfun(f):
-            print(seq)
