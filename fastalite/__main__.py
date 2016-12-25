@@ -33,7 +33,9 @@ def main(arguments):
         formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('action', choices=actions.keys(),
                         help="Action to perform")
-    parser.add_argument('infile', help="Input file", type=Opener('r'))
+    parser.add_argument('infile', help="Input file",
+                        metavar='infile.{fasta,fastq}[{.gz,.bz2}]',
+                        type=Opener('r'))
     parser.add_argument('-V', '--version', action='version',
                         version=__version__,
                         help='Print the version number and exit')
