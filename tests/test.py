@@ -2,7 +2,6 @@
 
 import os
 from os import path
-import inspect
 from unittest import TestCase
 
 from fastalite import fastalite, fastqlite, Opener
@@ -10,47 +9,44 @@ from fastalite import fastalite, fastqlite, Opener
 outdir = 'test_output'
 
 
-def mkoutdir(basedir):
-    stacknames = [x[3] for x in inspect.stack()]
-    testfun = [name for name in stacknames if name.startswith('test_')][0]
-    pth = path.join(basedir, testfun)
-
-    try:
-        os.makedirs(pth)
-    except OSError:
-        pass
-
-    return pth
-
-
 class TestOpener(TestCase):
 
+    def setUp(self):
+        funcname = '_'.join(self.id().split('.')[-2:])
+        self.fn = 'testfiles/ten.fasta'
+        d = path.join(outdir, funcname)
+        if not path.exists(d):
+            os.makedirs(d)
+
+        self.basename = path.join(outdir, funcname, path.basename(self.fn))
+
+        with open(self.fn) as f:
+            self.seqs = list(fastalite(f))
+
     def test_opener(self):
-        fn = 'testfiles/ten.fasta'
-
-        out = mkoutdir(outdir)
-
-        with Opener()(fn) as infile:
+        with Opener()(self.fn) as infile:
             seqs = fastalite(infile)
-            self.assertEqual(len(list(seqs)), 10)
+            self.assertEqual(list(seqs), self.seqs)
 
-        basename = path.join(out, path.basename(fn))
-        gzout = basename + '.gz'
-        bzout = basename + '.bz2'
-
-        with Opener()(fn) as infile, Opener('w')(gzout) as outfile:
-            for seq in fastalite(infile):
+    def test_gz(self):
+        fname = self.basename + '.gz'
+        with Opener('w')(fname) as outfile:
+            for seq in self.seqs:
                 outfile.write('>{}\n{}\n'.format(seq.description, seq.seq))
 
-        with Opener()(fn) as infile, Opener('w')(bzout) as outfile:
-            for seq in fastalite(infile):
+        with Opener()(fname) as infile:
+            seqs = fastalite(infile)
+            self.assertEqual(list(seqs), self.seqs)
+
+    def test_bz2(self):
+        fname = self.basename + '.bz2'
+        with Opener('w')(fname) as outfile:
+            for seq in self.seqs:
                 outfile.write('>{}\n{}\n'.format(seq.description, seq.seq))
 
-        with Opener()(fn) as a, Opener()(gzout) as b, Opener()(bzout) as c:
-            for sa, sb, sc in zip(fastalite(a), fastalite(b), fastalite(c)):
-                self.assertTrue(sa.id == sb.id == sc.id)
-                self.assertTrue(sa.description == sb.description == sc.description)
-                self.assertTrue(sa.seq == sb.seq == sc.seq)
+        with Opener()(fname) as infile:
+            seqs = fastalite(infile)
+            self.assertEqual(list(seqs), self.seqs)
 
 
 class TestFastq(TestCase):
