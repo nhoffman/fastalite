@@ -1,11 +1,19 @@
 import sys
 import gzip
 from collections import namedtuple
-from itertools import izip_longest
+
 try:
-    from bz2 import BZ2File
-except ImportError, err:
-    BZ2File = lambda x, *args, **kwargs: sys.exit(err)
+    from itertools import zip_longest
+except ImportError:
+    from itertools import izip_longest as zip_longest
+
+try:
+    import bz2
+except ImportError as err:
+    def bz2_open(filename, mode, *args, **kwargs):
+        sys.exit(err)
+else:
+    bz2_open = bz2.open if hasattr(bz2, 'open') else bz2.BZ2File
 
 
 class Opener(object):
@@ -18,10 +26,11 @@ class Opener(object):
             outfile.write(infile.read())
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, mode='r', *args, **kwargs):
+        self.mode = mode
         self.args = args
         self.kwargs = kwargs
-        self.writable = 'w' in kwargs.get('mode', args[0] if args else 'r')
+        self.writable = 'w' in self.mode
 
     def __call__(self, obj):
         if obj is sys.stdout or obj is sys.stdin:
@@ -29,10 +38,15 @@ class Opener(object):
         elif obj == '-':
             return sys.stdout if self.writable else sys.stdin
         else:
+            openers = {'bz2': bz2_open, 'gz': gzip.open}
             __, suffix = obj.rsplit('.', 1)
-            opener = {'bz2': BZ2File,
-                      'gz': gzip.open}.get(suffix, open)
-            return opener(obj, *self.args, **self.kwargs)
+            # in python3, both bz2 and gz libraries default to binary input and output
+            mode = self.mode
+            if sys.version_info.major == 3 and suffix in openers \
+               and mode in {'w', 'r'}:
+                mode += 't'
+            opener = openers.get(suffix, open)
+            return opener(obj, mode=mode, *self.args, **self.kwargs)
 
 
 def fastalite(handle):
@@ -61,7 +75,7 @@ def grouper(iterable, n, fillvalue=None):
     "Collect data into fixed-length chunks or blocks"
     # grouper('ABCDEFG', 3, 'x') --> ABC DEF Gxx
     args = [iter(iterable)] * n
-    return izip_longest(fillvalue=fillvalue, *args)
+    return zip_longest(fillvalue=fillvalue, *args)
 
 
 def fastqlite(handle):

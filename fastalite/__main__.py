@@ -4,7 +4,7 @@
 
 import sys
 import argparse
-from fastalite import fastalite, fastqlite, Opener
+from .fastalite import fastalite, fastqlite, Opener
 from . import __version__
 
 
@@ -16,12 +16,12 @@ def count(seqs):
 
 def names(seqs):
     for seq in seqs:
-        print(seq.id)
+        print((seq.id))
 
 
 def lengths(seqs):
     for seq in seqs:
-        print('{}\t{}'.format(seq.id, len(seq.seq)))
+        print(('{}\t{}'.format(seq.id, len(seq.seq))))
 
 
 def main(arguments):
@@ -31,7 +31,7 @@ def main(arguments):
     parser = argparse.ArgumentParser(
         prog='fastalite', description=__doc__,
         formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('action', choices=actions.keys(),
+    parser.add_argument('action', choices=list(actions.keys()),
                         help="Action to perform")
     parser.add_argument('infile', help="Input file",
                         metavar='infile.{fasta,fastq}[{.gz,.bz2}]',
@@ -47,7 +47,7 @@ def main(arguments):
         try:
             fun = actions[args.action]
             fun(seqs)
-        except ValueError, err:
+        except ValueError as err:
             sys.stderr.write('Error: {}\n'.format(str(err)))
             return 1
 
