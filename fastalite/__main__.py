@@ -9,6 +9,7 @@ from . import __version__
 
 
 def count(seqs, fname):
+    i = 1
     for i, seq in enumerate(seqs, 1):
         pass
 
