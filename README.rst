@@ -46,6 +46,8 @@ interface. For a list of available commands::
 Installation
 ============
 
+Compatible with Python versions 2.7 and 3.3+
+
 Install from PyPi using pip::
 
   pip install fastalite
