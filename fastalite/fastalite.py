@@ -95,8 +95,9 @@ def fastqlite(handle):
         description, seq, plus, qual = chunk
         seq, qual = seq.strip(), qual.strip()
 
-        checks = [description.startswith('@'), seq,
-                  plus.startswith('+'), qual, len(seq) == len(qual)]
+        checks = [description.startswith('@'), isinstance(seq, str),
+                  plus.startswith('+'), isinstance(qual, str),
+                  len(seq) == len(qual)]
 
         if not all(checks):
             raise ValueError('Malformed record around line {}'.format(i * 4))
