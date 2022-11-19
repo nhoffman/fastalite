@@ -76,6 +76,11 @@ class TestFastq(TestCase):
 
     def test_fastq5(self):
         with Opener()('testfiles/good_with_truncate.fastq') as infile:
-            seqs = fastqlite(infile)
+            seqs = fastqlite(infile, True)
             self.assertEqual(len(list(seqs)), 20)
+
+    def test_fastq6(self):
+        with Opener()('testfiles/good_with_truncate.fastq') as infile:
+            seqs = fastqlite(infile)
+            self.assertRaises(ValueError, list, seqs)
 

@@ -78,12 +78,14 @@ def grouper(iterable, n, fillvalue=None):
     return zip_longest(fillvalue=fillvalue, *args)
 
 
-def fastqlite(handle):
+def fastqlite(handle, allow_empty=False):
     """Return a sequence of namedtuple objects from a fastq file with
     attributes (id, description, seq, qual) given open file-like
     object ``handle``. This parser assumes that lines corresponding to
     sequences and quality scores are not wrapped. Raises
-    ``ValueError`` for malformed records.
+    ``ValueError`` for malformed records. Optionally allows fastq
+    files with empty strings in the sequence and quality lines 
+    to pass format check. 
 
     See https://doi.org/10.1093/nar/gkp1137 for a discussion of the
     fastq format.
@@ -95,9 +97,14 @@ def fastqlite(handle):
         description, seq, plus, qual = chunk
         seq, qual = seq.strip(), qual.strip()
 
-        checks = [description.startswith('@'), isinstance(seq, str),
-                  plus.startswith('+'), isinstance(qual, str),
-                  len(seq) == len(qual)]
+        if allow_empty:
+            checks = [description.startswith('@'), isinstance(seq, str),
+                      plus.startswith('+'), isinstance(qual, str),
+                      len(seq) == len(qual)]
+        else:
+            checks = [description.startswith('@'), seq,
+                      plus.startswith('+'), qual,
+                      len(seq) == len(qual)]
 
         if not all(checks):
             raise ValueError('Malformed record around line {}'.format(i * 4))
