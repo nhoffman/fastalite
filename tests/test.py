@@ -75,11 +75,13 @@ class TestFastq(TestCase):
             self.assertRaises(ValueError, list, seqs)
 
     def test_fastq5(self):
+        """Test allow_empty=True condition for fastq with empty seqs"""
         with Opener()('testfiles/good_with_truncate.fastq') as infile:
             seqs = fastqlite(infile, True)
             self.assertEqual(len(list(seqs)), 20)
 
     def test_fastq6(self):
+        """Test allow_empty=False condition for fastq with empty seqs"""        
         with Opener()('testfiles/good_with_truncate.fastq') as infile:
             seqs = fastqlite(infile)
             self.assertRaises(ValueError, list, seqs)
