@@ -2,6 +2,13 @@
  fastalite history
 ===================
 
+version 0.4
+===========
+
+* add 'allow_empty' parameter to fastqlite() to allow empty sequences
+  to pass validation (motivating use case is to handle zero-length
+  sequences resulting from cutadapt).
+
 version 0.3
 ===========
 
