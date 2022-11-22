@@ -29,7 +29,7 @@ setup(
     version=__version__,
     test_suite='tests',
     classifiers=[
-        'Development Status :: 5 - Production/Stable'
+        'Development Status :: 5 - Production/Stable',
         'Intended Audience :: Developers',
         'Operating System :: POSIX',
         'Programming Language :: Python :: 3.7',
