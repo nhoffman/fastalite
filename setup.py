@@ -1,6 +1,10 @@
 import os
 import subprocess
 from setuptools import setup, find_packages
+from pathlib import Path
+
+this_directory = Path(__file__).parent
+long_description = (this_directory / "README.rst").read_text()
 
 subprocess.call(
     ('mkdir -p fastalite/data && '
@@ -15,6 +19,8 @@ setup(
     author='Noah Hoffman',
     author_email='noah.hoffman@gmail.com',
     description='Simplest possible fasta parser',
+    long_description=long_description,
+    long_description_content_type='text/x-rst',
     url='https://github.com/nhoffman/fastalite',
     name='fastalite',
     packages=find_packages(),
@@ -23,13 +29,13 @@ setup(
     version=__version__,
     test_suite='tests',
     classifiers=[
-        'Development Status :: 4 - Beta',
+        'Development Status :: 5 - Production/Stable'
         'Intended Audience :: Developers',
         'Operating System :: POSIX',
-        'Programming Language :: Python :: 2.7',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
-        'Programming Language :: Python :: 3.6',
         'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
+        'Programming Language :: Python :: 3.11',
     ],
 )

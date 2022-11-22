@@ -2,6 +2,11 @@
  fastalite history
 ===================
 
+version 0.4.1
+=============
+
+* update metadata and add project description
+
 version 0.4
 ===========
 
